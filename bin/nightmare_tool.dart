@@ -7,7 +7,6 @@ import 'package:ffi/ffi.dart';
 
 import 'screen/login.dart';
 import 'utils/custom_log.dart';
-import 'package:dart_pty/dart_pty.dart';
 
 const String arrowChar = ' \x1b[1;32m←\x1b[0m ';
 const String cursorUpChar = '\x1b[A';
@@ -224,30 +223,4 @@ Future<void> fileConvert() async {
   });
 }
 
-Future<void> execUnzip() async {
-  final Map<String, String> environment = {'TEST': 'TEST_VALUE'};
-  final PseudoTerminal unixPthC = PseudoTerminal(
-    environment: environment,
-    executable: Platform.isWindows ? 'wsl' : 'bash',
-    row: 53,
-    column: 49,
-  );
-  await Future<void>.delayed(const Duration(milliseconds: 100));
-  String result;
-  unixPthC.read();
-  stdin.echoMode = true;
-  stdin.lineMode = true;
-  await Future.delayed(const Duration(milliseconds: 100), () async {
-    while (true) {
-      print('请向终端输入一些东西');
-      final String input = stdin.readLineSync();
-      unixPthC.write(input + '\n');
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      result = await unixPthC.read();
-      println('-' * 20 + 'result' + '-' * 20);
-      println('result -> $result');
-      println('-' * 20 + 'result' + '-' * 20);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-  });
-}
+Future<void> execUnzip() async {}

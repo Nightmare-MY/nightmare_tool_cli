@@ -128,7 +128,7 @@ Future<void> main(List<String> arguments) async {
   // cursorLeft();
   showArrow(3);
   // 隐藏光标，没有生效
-  print('\x1b[?25l');
+  // print('\x1b[?25l');
   showLine = 3;
   await onKeyListiner(
     (key) {
@@ -227,6 +227,7 @@ void system(String script, List<String> args) {
 
 Future<void> execUnzip() async {
   List<FileSystemEntity> dirs = Directory.current.listSync();
+  print(dirs);
   List<String> zipFiles = [];
   chooseIndex = 1;
   dirs.forEach((element) {
@@ -284,7 +285,7 @@ Future<void> execUnzip() async {
     }
   });
   // print(zipFils);
-  stdin.readLineSync();
-  // String a = stdin.readLineSync();
-  // print(a);
+  // stdin.readLineSync();
+  String a = stdin.readLineSync();
+  print(a);
 }

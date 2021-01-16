@@ -1,8 +1,0 @@
-      function unZipRom(){
-          #python_check
-          #7z_check
-          echo "[1;31m>>> 完整解压ROM中...[0m"
-          7z x -aoa "/Users/nightmare/Desktop/nightmare-space/nightmare_tool_cli/miui_PHOENIX_20.9.17_199c04a662_10.0.zip" -o"./UnpackedRom" >/dev/null
-          echo "<<< 刷机包解压结束..."
-      }
-      

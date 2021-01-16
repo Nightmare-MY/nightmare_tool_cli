@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:args/args.dart'; // 使用其中两个类ArgParser和ArgResults
 import 'package:ffi/ffi.dart';
 
+import 'header/cstdlib.dart';
 import 'header/cunistd.dart';
 import 'screen/login.dart';
 import 'utils/custom_log.dart';
@@ -202,27 +203,32 @@ Future<void> fileConvert() async {
 //   }
 //   print(arrowChar);
 // }
-void system(String script, List<String> args) {
+void system(String script) {
+  CStdlib cStdlib;
+  DynamicLibrary dynamicLibrary = DynamicLibrary.process();
+  cStdlib = CStdlib(dynamicLibrary);
+  final Pointer<Int8> nativeString = Utf8.toUtf8(script).cast();
+  cStdlib.system(nativeString);
+  free(nativeString);
+  return;
   // print(args);
   CUnistd cunistd;
-  DynamicLibrary dynamicLibrary = DynamicLibrary.process();
   cunistd = CUnistd(dynamicLibrary);
-  final Pointer<Int8> nativeString = Utf8.toUtf8(script).cast();
   Pointer<Pointer<Utf8>> argv;
 
-  argv = allocate<Pointer<Utf8>>(count: args.length + 1);
+  // argv = allocate<Pointer<Utf8>>(count: args.length + 1);
 
-  /// 将Map内容拷贝到二维数组
-  for (int i = 0; i < args.length; i++) {
-    argv[i] = Utf8.toUtf8(
-      args[i],
-    );
-  }
+  // /// 将Map内容拷贝到二维数组
+  // for (int i = 0; i < args.length; i++) {
+  //   argv[i] = Utf8.toUtf8(
+  //     args[i],
+  //   );
+  // }
 
-  argv[args.length] = nullptr;
-  cunistd.execvp(nativeString, argv.cast());
-  free(argv);
-  free(nativeString);
+  // argv[args.length] = nullptr;
+  // cunistd.execvp(nativeString, argv.cast());
+  // free(argv);
+  // free(nativeString);
 }
 
 Future<void> execUnzip() async {
@@ -264,7 +270,8 @@ Future<void> execUnzip() async {
           // fileConvert();
           // print('7z');
           // system('sh', ['sh', '-c', 'pwd']);
-          system('sh', ['sh', '-c', 'source define && unZipRom\n']);
+          system('env\n');
+          system('source define && unZipRom\n');
           File('define').deleteSync();
           // system('sh', ['sh', '-c', './define']);
           // system('7z', ['7z', 't', zipFiles[chooseIndex]]);

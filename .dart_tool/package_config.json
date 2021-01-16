@@ -20,20 +20,8 @@
       "languageVersion": "2.3"
     },
     {
-      "name": "dart_pty",
-      "rootUri": "../../../termare-space/dart_pty",
-      "packageUri": "lib/",
-      "languageVersion": "2.7"
-    },
-    {
       "name": "dio",
       "rootUri": "file:///Users/nightmare/.pub-cache/hosted/pub.flutter-io.cn/dio-3.0.10",
-      "packageUri": "lib/",
-      "languageVersion": "2.4"
-    },
-    {
-      "name": "executorservices",
-      "rootUri": "file:///Users/nightmare/.pub-cache/hosted/pub.flutter-io.cn/executorservices-2.0.3",
       "packageUri": "lib/",
       "languageVersion": "2.4"
     },
@@ -86,19 +74,13 @@
       "languageVersion": "2.4"
     },
     {
-      "name": "win32",
-      "rootUri": "file:///Users/nightmare/.pub-cache/hosted/pub.flutter-io.cn/win32-1.7.4",
-      "packageUri": "lib/",
-      "languageVersion": "2.7"
-    },
-    {
       "name": "nightmare_tool_cli",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.8"
     }
   ],
-  "generated": "2021-01-16T15:46:12.030316Z",
+  "generated": "2021-01-16T16:03:24.333597Z",
   "generator": "pub",
   "generatorVersion": "2.10.4"
 }

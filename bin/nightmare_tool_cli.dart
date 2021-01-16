@@ -227,7 +227,6 @@ void system(String script, List<String> args) {
 
 Future<void> execUnzip() async {
   List<FileSystemEntity> dirs = Directory.current.listSync();
-  print(dirs);
   List<String> zipFiles = [];
   chooseIndex = 1;
   dirs.forEach((element) {

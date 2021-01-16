@@ -21,7 +21,7 @@
     },
     {
       "name": "dart_pty",
-      "rootUri": "../../../../termare-space/dart_pty",
+      "rootUri": "../../../termare-space/dart_pty",
       "packageUri": "lib/",
       "languageVersion": "2.7"
     },
@@ -92,13 +92,13 @@
       "languageVersion": "2.7"
     },
     {
-      "name": "nightmare_tool",
+      "name": "nightmare_tool_cli",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.8"
     }
   ],
-  "generated": "2021-01-15T08:53:00.764846Z",
+  "generated": "2021-01-16T15:46:12.030316Z",
   "generator": "pub",
   "generatorVersion": "2.10.4"
 }

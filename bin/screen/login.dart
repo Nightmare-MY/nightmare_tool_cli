@@ -17,7 +17,7 @@ Future<void> login() async {
     );
     // Log.v(userInfo);
     Log.i('欢迎回来 ${userInfo.username}');
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
   } else {
     // Log.e('object');
     // print('欢迎使用魇·工具箱终端版');

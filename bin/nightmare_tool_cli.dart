@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:args/args.dart'; // 使用其中两个类ArgParser和ArgResults
 import 'package:ffi/ffi.dart';
 
+import 'header/cunistd.dart';
 import 'screen/login.dart';
 import 'utils/custom_log.dart';
 
@@ -23,8 +25,9 @@ void cursorRight() => print(cursorRightChar);
 void deleteOne() => print(deleteOneChar);
 
 int chooseIndex = 1;
-void showArrow() {
-  for (int i = 3 - chooseIndex; i > 0; i--) {
+int showLine = 0;
+void showArrow(int maxLine) {
+  for (int i = maxLine - chooseIndex; i > 0; i--) {
     cursorUp();
   }
   print(arrowChar);
@@ -70,6 +73,47 @@ Future<void> onKeyListiner(bool Function(int key) onKey) async {
   }
 }
 
+void moveArrow(int key) {
+  switch (key) {
+    case 65:
+      if (chooseIndex > 1) {
+        chooseIndex--;
+        deleteArrow();
+        cursorUp();
+        print(arrowChar);
+      }
+      // up
+      // print('press up');
+      break;
+    case 66:
+      // down
+      // print('press down');
+      if (chooseIndex < showLine) {
+        chooseIndex++;
+        deleteArrow();
+        cursorDown();
+        print(arrowChar);
+      }
+      break;
+    case 68:
+      if (chooseIndex > 1) {
+        chooseIndex--;
+        deleteArrow();
+        cursorUp();
+        print(arrowChar);
+      }
+      break;
+    case 67:
+      if (chooseIndex < showLine) {
+        chooseIndex++;
+        deleteArrow();
+        cursorDown();
+        print(arrowChar);
+      }
+      break;
+  }
+}
+
 Future<void> main(List<String> arguments) async {
   Log.e('欢迎使用 魇·工具箱 终端版');
   await login();
@@ -82,9 +126,10 @@ Future<void> main(List<String> arguments) async {
   print('2.动态模块\n');
   print('3.一键执行');
   // cursorLeft();
-  showArrow();
+  showArrow(3);
   // 隐藏光标，没有生效
   print('\x1b[?25l');
+  showLine = 3;
   await onKeyListiner(
     (key) {
       if (key == 13 || key == 10) {
@@ -100,44 +145,7 @@ Future<void> main(List<String> arguments) async {
       if (csiStart) {
         csiStart = false;
         // print(key);
-        switch (key) {
-          case 65:
-            if (chooseIndex > 1) {
-              chooseIndex--;
-              deleteArrow();
-              cursorUp();
-              print(arrowChar);
-            }
-            // up
-            // print('press up');
-            break;
-          case 66:
-            // down
-            // print('press down');
-            if (chooseIndex < 3) {
-              chooseIndex++;
-              deleteArrow();
-              cursorDown();
-              print(arrowChar);
-            }
-            break;
-          case 68:
-            if (chooseIndex > 1) {
-              chooseIndex--;
-              deleteArrow();
-              cursorUp();
-              print(arrowChar);
-            }
-            break;
-          case 67:
-            if (chooseIndex < 3) {
-              chooseIndex++;
-              deleteArrow();
-              cursorDown();
-              print(arrowChar);
-            }
-            break;
-        }
+        moveArrow(key);
         return false;
       }
     },
@@ -158,6 +166,7 @@ Future<void> fileConvert() async {
   print('2.整合刷机文件\n');
   print('3.打包刷机包\n');
   print('0.返回上级\n');
+  showLine = 4;
   maxLine = 4;
   print('\x1b[4A');
   print('\x1b[14C');
@@ -180,47 +189,102 @@ Future<void> fileConvert() async {
     if (csiStart) {
       csiStart = false;
       // print(key);
-      switch (key) {
-        case 65:
-          if (chooseIndex > 1) {
-            chooseIndex--;
-            deleteArrow();
-            cursorUp();
-            print(arrowChar);
-          }
-          // up
-          // print('press up');
-          break;
-        case 66:
-          // down
-          // print('press down');
-          if (chooseIndex < maxLine) {
-            chooseIndex++;
-            deleteArrow();
-            cursorDown();
-            print(arrowChar);
-          }
-          break;
-        case 68:
-          if (chooseIndex > 1) {
-            chooseIndex--;
-            deleteArrow();
-            cursorUp();
-            print(arrowChar);
-          }
-          break;
-        case 67:
-          if (chooseIndex < maxLine) {
-            chooseIndex++;
-            deleteArrow();
-            cursorDown();
-            print(arrowChar);
-          }
-          break;
-      }
+      moveArrow(key);
       return false;
     }
   });
 }
 
-Future<void> execUnzip() async {}
+// int chooseIndex = 1;
+// void showArrow() {
+//   for (int i = 3 - chooseIndex; i > 0; i--) {
+//     cursorUp();
+//   }
+//   print(arrowChar);
+// }
+void system(String script, List<String> args) {
+  // print(args);
+  CUnistd cunistd;
+  DynamicLibrary dynamicLibrary = DynamicLibrary.process();
+  cunistd = CUnistd(dynamicLibrary);
+  final Pointer<Int8> nativeString = Utf8.toUtf8(script).cast();
+  Pointer<Pointer<Utf8>> argv;
+
+  argv = allocate<Pointer<Utf8>>(count: args.length + 1);
+
+  /// 将Map内容拷贝到二维数组
+  for (int i = 0; i < args.length; i++) {
+    argv[i] = Utf8.toUtf8(
+      args[i],
+    );
+  }
+
+  argv[args.length] = nullptr;
+  cunistd.execvp(nativeString, argv.cast());
+  free(argv);
+  free(nativeString);
+}
+
+Future<void> execUnzip() async {
+  List<FileSystemEntity> dirs = Directory.current.listSync();
+  List<String> zipFiles = [];
+  chooseIndex = 1;
+  dirs.forEach((element) {
+    if (element.path.endsWith('zip')) {
+      zipFiles.add(element.path);
+      zipFiles.add(element.path);
+      zipFiles.add(element.path);
+      zipFiles.add(element.path);
+    }
+  });
+  for (int i = 0; i < zipFiles.length; i++) {
+    print(zipFiles[i].replaceAll(RegExp('.*/'), ''));
+    if (i != zipFiles.length - 1) {
+      print('\n');
+    }
+  }
+  showArrow(zipFiles.length);
+  await onKeyListiner((key) {
+    // print('object');
+    if (key == 13 || key == 10) {
+      print('object');
+      clear();
+      String script = '''
+      function unZipRom(){
+          #python_check
+          #7z_check
+          echo "\x1b[1;31m>>> 完整解压ROM中...\x1b[0m"
+          7z x -aoa "${zipFiles[chooseIndex]}" -o"./UnpackedRom" >/dev/null
+          echo "<<< 刷机包解压结束..."
+      }
+      ''';
+      File('define').writeAsStringSync(script);
+      switch (chooseIndex) {
+        case 1:
+          // fileConvert();
+          // print('7z');
+          // system('sh', ['sh', '-c', 'pwd']);
+          system('sh', ['sh', '-c', 'source define && unZipRom\n']);
+          File('define').deleteSync();
+          // system('sh', ['sh', '-c', './define']);
+          // system('7z', ['7z', 't', zipFiles[chooseIndex]]);
+          // print('Platform.environment -> ${Platform.environment['TMPDIR']}');
+          // execUnzip();
+
+          break;
+      }
+      return true;
+      // print(chooseIndex);
+    }
+    if (csiStart) {
+      csiStart = false;
+      // print(key);
+      moveArrow(key);
+      return false;
+    }
+  });
+  // print(zipFils);
+  stdin.readLineSync();
+  // String a = stdin.readLineSync();
+  // print(a);
+}

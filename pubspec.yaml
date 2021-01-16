@@ -7,3 +7,6 @@ dependencies:
   args: "1.6.0"
   dio: ^3.0.3
   ffi: ^0.1.3
+
+  dart_pty:
+    path: ../../termare-space/dart_pty

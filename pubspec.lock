@@ -25,7 +25,7 @@ packages:
   dart_pty:
     dependency: "direct main"
     description:
-      path: "../../../termare-space/dart_pty"
+      path: "../../termare-space/dart_pty"
       relative: true
     source: path
     version: "0.0.3"

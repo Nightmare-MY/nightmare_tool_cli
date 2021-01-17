@@ -10,6 +10,7 @@ import 'header/cstdlib.dart';
 import 'header/cunistd.dart';
 import 'screen/login.dart';
 import 'utils/custom_log.dart';
+import 'utils/script_generate.dart' as script;
 
 const String arrowChar = ' \x1b[1;32m←\x1b[0m ';
 const String cursorUpChar = '\x1b[A';
@@ -120,7 +121,10 @@ Future<void> main(List<String> arguments) async {
   await login();
   stdin.echoMode = false;
   stdin.lineMode = false;
+  home();
+}
 
+Future<void> home() async {
   print('\x1b[2J');
   print('\x1b[0;0H');
   print('1.文件转换\n');
@@ -161,18 +165,17 @@ void println(Object object) {
   stdout.write('$object\n');
 }
 
-int maxLine = 0;
 Future<void> fileConvert() async {
   print('1.解压刷机包\n');
   print('2.整合刷机文件\n');
   print('3.打包刷机包\n');
+  print('4.解压br文件\n');
   print('0.返回上级\n');
-  showLine = 4;
-  maxLine = 4;
+  showLine = 5;
   print('\x1b[4A');
   print('\x1b[14C');
   chooseIndex = 1;
-  print(arrowChar);
+  showArrow(showLine);
   await onKeyListiner((key) {
     // print('object');
     if (key == 13 || key == 10) {
@@ -182,6 +185,10 @@ Future<void> fileConvert() async {
         case 1:
           // fileConvert();
           execUnzip();
+          break;
+        case 4:
+          // fileConvert();
+          unzipSystemBr();
           break;
       }
       return true;
@@ -194,6 +201,16 @@ Future<void> fileConvert() async {
       return false;
     }
   });
+}
+
+void unzipSystemBr() {
+  File('define').writeAsStringSync(
+    script.unZipBrScript('UnpackedRom/system.new.dat.br'),
+  );
+  system('source define && rm -rf define && unZipBrsystem\n');
+  stdin.readLineSync();
+  clear();
+  fileConvert();
 }
 
 // int chooseIndex = 1;
@@ -238,9 +255,6 @@ Future<void> execUnzip() async {
   dirs.forEach((element) {
     if (element.path.endsWith('zip')) {
       zipFiles.add(element.path);
-      zipFiles.add(element.path);
-      zipFiles.add(element.path);
-      zipFiles.add(element.path);
     }
   });
   for (int i = 0; i < zipFiles.length; i++) {
@@ -249,6 +263,7 @@ Future<void> execUnzip() async {
       print('\n');
     }
   }
+  showLine = zipFiles.length;
   showArrow(zipFiles.length);
   await onKeyListiner((key) {
     // print('object');
@@ -260,7 +275,7 @@ Future<void> execUnzip() async {
           #python_check
           #7z_check
           echo "\x1b[1;31m>>> 完整解压ROM中...\x1b[0m"
-          7z x -aoa "${zipFiles[chooseIndex]}" -o"./UnpackedRom" >/dev/null
+          7z x -aoa "${zipFiles[chooseIndex - 1]}" -o"./UnpackedRom" >/dev/null
           echo "<<< 刷机包解压结束..."
       }
       ''';
@@ -270,9 +285,9 @@ Future<void> execUnzip() async {
           // fileConvert();
           // print('7z');
           // system('sh', ['sh', '-c', 'pwd']);
-          system('env\n');
-          system('source define && unZipRom\n');
-          File('define').deleteSync();
+          system('source define && rm -rf define && unZipRom\n');
+          clear();
+          fileConvert();
           // system('sh', ['sh', '-c', './define']);
           // system('7z', ['7z', 't', zipFiles[chooseIndex]]);
           // print('Platform.environment -> ${Platform.environment['TMPDIR']}');
@@ -290,8 +305,4 @@ Future<void> execUnzip() async {
       return false;
     }
   });
-  // print(zipFils);
-  // stdin.readLineSync();
-  String a = stdin.readLineSync();
-  print(a);
 }

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import '../../http/http.dart';
-import '../../utils/custom_log.dart';
 import '../model/user_info.dart';
 import '../model/user_register_model.dart';
 

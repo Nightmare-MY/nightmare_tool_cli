@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:custom_log/custom_log.dart';
 import 'package:dio/dio.dart';
 
 import '../http/http.dart';
 import '../user/model/user_info.dart';
 import '../user/repository/user_repository.dart';
-import '../utils/custom_log.dart';
 
 const String userJson = 'userinfo.json';
 File userLocalfile = File(userJson);

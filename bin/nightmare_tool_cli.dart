@@ -4,12 +4,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:args/args.dart'; // 使用其中两个类ArgParser和ArgResults
+import 'package:custom_log/custom_log.dart';
 import 'package:ffi/ffi.dart';
 
 import 'header/cstdlib.dart';
 import 'header/cunistd.dart';
 import 'screen/login.dart';
-import 'utils/custom_log.dart';
 import 'utils/script_generate.dart' as script;
 
 const String arrowChar = ' \x1b[1;32m←\x1b[0m ';

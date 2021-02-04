@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:custom_log/custom_log.dart';
+
 // 需要几个Shell变量
 // CUR_PRO工程路径
 // NIGHTMARE_PATH
@@ -15,17 +17,12 @@ String exitScript = 'echo -e "\\033[1;32m返回按键已释放。\\033[0m"\n'
     'rm -rf $termLockFilePath'; //终端模拟器退出的公用代码
 const String fileurl = 'http://nightmare.fun/File/MToolkit'; //39.107.248.176
 
-String execwithloading =
-    'python3 ${filesPath + '/usr/python/execwithloading.py'}';
-String loadingPrifix =
-    'python3 ${filesPath + '/usr/python/execwithloading.py'}';
+String loadingPrifix = './src/src/night';
 String unZipRomScript(String filepath) {
   // 得到解压刷机包的命令行
   return '''
 function unZipRom(){
-  python_check
-  7z_check
-  echo -n -e "\\033[1;31m>>> 完整解压ROM中...\\033[0m"
+  /bin/echo -n "\\033[1;31m>>> 完整解压ROM中...\\033[0m"
   $loadingPrifix '
   7z x -aoa "$filepath" -o"\$CUR_PRO/UnpackedRom" >/dev/null
   '
@@ -49,10 +46,11 @@ String unZipBrScript(String filepath) {
   }
   return """
 function unZipBr$_name(){ 
-  python_check
-  brotli_check
   echo -n -e '\\033[1;31m>>> 解压 br 中...\\033[0m'
-  brotli -d -f "$filepath"
+  brotli_auto
+  $loadingPrifix '
+  brotli_auto -d -f "$filepath"
+  '
   echo "<<< br解压结束。"
 }
 """;
@@ -73,11 +71,9 @@ String zipBrScript(String filepath) {
   }
   return """
 function zipBr$_name(){ 
-  python_check
-  brotli_check
   echo -n -e '\\033[1;31m>>> 压缩 br 中...\\033[0m'
-  $execwithloading '
-  brotli -q 3 -f "$filepath"
+  $loadingPrifix '
+  brotli_auto -q 3 -f "$filepath"
   '
   echo "<<< br压缩结束。"
 }
@@ -86,6 +82,7 @@ function zipBr$_name(){
 
 Future<String> unZipImgScript(String filepath) async {
   //得到解压刷机包的命令行
+  Log.i('得到解压刷机包的命令行');
   final String _name = filepath.replaceAll(RegExp('.*/|\\..*'), '');
   String tmpPath;
   if (Platform.isWindows) {
@@ -101,11 +98,10 @@ Future<String> unZipImgScript(String filepath) async {
         """
 function unZipImg$_name(){
   touch $termLockFilePath
-  python_check
-  rom-tool_check
+  rom-tool_auto
   filesize=\$(${Platform.isLinux ? "" : "busybox"} stat -c \"%s\" "$filepath")
   echo -n -e '\\033[1;31m>>> 解压 $_name img 中...\\033[0m'
-  $execwithloading '
+  $loadingPrifix '
   7z x -y -aoa "$filepath" -o"\$CUR_PRO/UnpackedImg/$_name/" >/dev/null
   '
   rm -rf "\$CUR_PRO/UnpackedImg/$_name/[SYS]"
@@ -201,11 +197,9 @@ String sdat2ImgScript(String dataFilePath, String listFilepath) {
   function sdat2img$_name()
   {
     touch $termLockFilePath
-    python_check
-    7z_check
-    rom-tool_check
+    rom-tool_auto
     echo -n -e '\\033[1;31m>>> 转换dat中...\\033[0m'
-    $execwithloading '
+    $loadingPrifix '
     python3 /data/data/com.nightmare/files/usr/python/sdat2img.py "$listFilepath" "$dataFilePath" "${File(dataFilePath).parent.path}/$_name.img" >/dev/null
     '
     echo "<<< 转换dat结束。"
@@ -217,11 +211,8 @@ String sdat2ImgScript(String dataFilePath, String listFilepath) {
   function sdat2img$_name()
   {
     touch $termLockFilePath
-    python_check
-    7z_check
-    rom-tool_check
     echo -n -e '\\033[1;31m>>> 转换dat中...\\033[0m'
-    $execwithloading '
+    $loadingPrifix '
     python3 $filesPath/usr/python/sdat2img.py $listFilepath $dataFilePath ${File(dataFilePath).parent.path}/$_name.img >/dev/null
     '
     echo "<<< 转换dat结束。"
@@ -280,18 +271,17 @@ String deleteBootAvb() {
   return '''
   function deleteBootAvb(){
     touch $termLockFilePath
-    magisk-boot_check
+    magisk-boot_auto
     if [ ! -f "$filesPath/usr/python/delete_avb.py" ]; then
       echo  -e  "\\033[1;31m未发现avb算法下载中\\033[0m"
       mkdir $filesPath/usr/python >/dev/null 2>&1
       curl "$fileurl/Rom/python/delete_avb.py" -o $filesPath/usr/python/delete_avb.py
-      echo "\\033[1;31m下载完成\\033[0m"
     fi
     echo -e "\\033[1;31m去除boot分区avb\\033[0m"
 
     su -c "
     export PATH=/data/data/com.nightmare/files/usr/bin:\$PATH
-    ${binPath}/python ${filesPath}/usr/python/delete_avb.py /data/data/com.nightmare/files/home/AIK-mobile/ramdisk/fstab.qcom
+    $binPath/python $filesPath/usr/python/delete_avb.py /data/data/com.nightmare/files/home/AIK-mobile/ramdisk/fstab.qcom
     rm -rf /data/data/com.nightmare/files/home/AIK-mobile/ramdisk/verity_key
     magiskboot hexpatch \\
     /data/data/com.nightmare/files/home/AIK-mobile/split_img/boot.img-zImage 2C617662 00000000
@@ -327,11 +317,10 @@ String doPermissiveScript() {
 String repackRom(String name) {
   return """
   function repackRom(){
-    python_check
     echo -n -e '\\033[1;31m打包中...\\033[0m'
     rm -rf \$CUR_PRO/UnpackedRom/文件的生成目录
     rm -rf \$CUR_PRO/UnpackedRom/compatibility.zip
-    $execwithloading '
+    $loadingPrifix '
     7z -tZip a "\$CUR_PRO/UnpackedRom/$name.zip" \$CUR_PRO/UnpackedRom/* -mx1 >/dev/null
     '
     rm -rf \$CUR_PRO/UnpackedRom/system.*
@@ -360,10 +349,9 @@ String img2sdatScript(String filepath) {
   function img2sdat$_name()
   {
     touch $termLockFilePath
-    python_check
-    rom-tool_check
+    rom-tool_auto
     echo -n -e '\\033[1;31m转换Simg到Sdat中...\\033[0m'
-    $execwithloading '
+    $loadingPrifix '
     python3 /data/data/com.nightmare/files/usr/python/img2sdat.py -o ${File(filepath).parent.path} -v 4 -p $_name $filepath >/dev/null 
     '
     echo 已转换至${File(filepath).parent.path}文件夹下
@@ -376,7 +364,7 @@ String img2sdatScript(String filepath) {
   {
     touch $termLockFilePath
     echo -n -e '\\033[1;31m转换Simg到Sdat中...\\033[0m'
-    $execwithloading '
+    $loadingPrifix '
     python3 $filesPath/usr/python/Img2sdat/img2sdat.py -o ${File(filepath).parent.path} -v 4 -p $_name $filepath >/dev/null 
     rm -rf /data/data/com.nightmare/files/home/bin/
     '
@@ -397,8 +385,7 @@ String repackImgScript(String simg) {
   function repackImg()
   {
     touch $termLockFilePath
-    python_check
-    rom-tool_check
+    rom-tool_auto
     cd "\$CUR_PRO/UnpackedImg"
     directorys=\$(find ./ -maxdepth 1 -type d | sed 's/.\\///g')
     for flodername in \$directorys
@@ -408,12 +395,12 @@ String repackImgScript(String simg) {
             echo 清空 \$flodername 历史缓存...
             rm -rf /data/data/com.nightmare/files/home/\$flodername
             echo -n -e "\\033[1;31m复制 \$flodername 到数据目录...\\033[0m"
-            $execwithloading "
+            $loadingPrifix "
             cp -rf '\$CUR_PRO/UnpackedImg/\$flodername' /data/data/com.nightmare/files/home
             "
             echo -n -e "\\033[1;31m恢复 \$flodername 符号链接...\\033[0m"
             export link_name=\$flodername'_links'
-            $execwithloading '
+            $loadingPrifix '
             cp -rf "\$CUR_PRO/Config/\$link_name" /data/data/com.nightmare/files/home/
             sh /data/data/com.nightmare/files/home/\$link_name >/dev/null 2>&1
             '
@@ -463,7 +450,7 @@ String repackImgScript(String simg) {
       do
           if [ \"\$flodername\" != \"./\" ]; then
             echo -n -e "\\033[1;31m恢复 \$flodername 符号链接...\\033[0m"
-            $execwithloading "
+            $loadingPrifix "
             sh \$CUR_PRO/Config/\$flodername'_links'
             "
             filesize=\$(cat \$CUR_PRO/Config/\$flodername'_size')
@@ -573,23 +560,23 @@ String deodexScript() {
   function deodexFunc()
   {
     touch $termLockFilePath
-    python_check
-    zip_check
+    python_auto
+    zip_auto
     echo -e "\\033[1;31m下载deodex算法中\\033[0m"
-    curl "$fileurl/Deodex/Deodex1" -o "${tmpPath}/Deodex1"
-    curl "$fileurl/Deodex/Deodex2" -o "${tmpPath}/Deodex2"
+    curl "$fileurl/Deodex/Deodex1" -o "$tmpPath/Deodex1"
+    curl "$fileurl/Deodex/Deodex2" -o "$tmpPath/Deodex2"
     echo -e "\\033[1;31m下载结束,合并中\\033[0m"
     if [ -d "\$CUR_PRO/UnpackedImg/system/system" ]; then
       cd "\$CUR_PRO/UnpackedImg/system/system"
       pwd
-      python3 ${tmpPath}/Deodex1 \$CUR_PRO/UnpackedImg/system/system
-      python3 ${tmpPath}/Deodex1 \$CUR_PRO/UnpackedImg/vendor
-      python3 ${tmpPath}/Deodex2 \$CUR_PRO/UnpackedImg/system/system
+      python3 $tmpPath/Deodex1 \$CUR_PRO/UnpackedImg/system/system
+      python3 $tmpPath/Deodex1 \$CUR_PRO/UnpackedImg/vendor
+      python3 $tmpPath/Deodex2 \$CUR_PRO/UnpackedImg/system/system
     else
       cd "\$CUR_PRO/UnpackedImg/system"
-      python3 ${tmpPath}/Deodex1 \$CUR_PRO/UnpackedImg/system
-      python3 ${tmpPath}/Deodex1 \$CUR_PRO/UnpackedImg/vendor
-      python3 ${tmpPath}/Deodex2 \$CUR_PRO/UnpackedImg/system
+      python3 $tmpPath/Deodex1 \$CUR_PRO/UnpackedImg/system
+      python3 $tmpPath/Deodex1 \$CUR_PRO/UnpackedImg/vendor
+      python3 $tmpPath/Deodex2 \$CUR_PRO/UnpackedImg/system
     fi
     #判断A/B机型并进入到system上一级文件夹
     echo -e "\\033[1;31m合并结束,清除剩余缓存\\033[0m"
@@ -659,39 +646,55 @@ String integrationMagisk(String version) {
   String _tmp = '';
   _tmp = """
   integrationMagisk(){
-    magisk_file=$version
-    echo -n -e "\\033[1;31m检测本地面具资源:\\033[0m"
+    magisk_file=Magisk-$version.zip
+    echo -n -e "\\033[1;31m检测本地面具资源...\\033[0m"
     sleep 0.5
-    if [ -f "${binPath}/\$magisk_file" ]; then
-      echo  -e  "\\033[1;31m本地存在对应版本Magisk\\033[0m"
+    if [ -f "$binPath/\$magisk_file" ]; then
+      echo  "本地存在对应版本Magisk"
     else
-      echo  -e  "\\033[1;31m未发现本地Magisk\\033[0m"
-      echo  -e  "\\033[1;31m正在下载中...\\033[0m"
-      curl "$fileurl/android/\$magisk_file" -o ${binPath}/\$magisk_file
-      echo -e "\\033[1;31m下载完成\\033[0m"
+      echo  "未发现本地Magisk"
+      echo  "正在下载中..."
+      curl "$fileurl/android/magisk/\$magisk_file" -o $binPath/\$magisk_file
     fi
-    echo -n  -e  "\\033[1;31m集成中   :\\033[0m"
+    echo -n  -e  "\\033[1;31m集成中...\\033[0m"
     mkdir -p \$CUR_PRO/UnpackedRom/META-INF/com/google/android/Magisk
-    cp -f ${binPath}/\$magisk_file \$CUR_PRO/UnpackedRom/META-INF/com/google/android/Magisk/
-    echo  -e  "\\033[1;31m集成完成\\033[0m"
+    cp -f $binPath/\$magisk_file \$CUR_PRO/UnpackedRom/META-INF/com/google/android/Magisk/Magisk.zip
+    echo "集成完成"
     sleep 0.5
     lineWhich=`cat \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script | \\
     grep -n set_progress | \\
     awk -F ":" '{print \$1}'`
     echo \$lineWhich
-    echo -n  -e  "\\033[1;31m添加刷机脚本中:\\033[0m"
-      sed -i "\$lineWhich"' i\\run_program(\"/sbin/sh\", \"/tmp/Magisk/META-INF/com/google/android/update-binary\", \"dummy\", \"1\", \"/tmp/Magisk/Magisk\");' \\
+    echo -n  -e  "\\033[1;31m添加刷机脚本中...\\033[0m"
+    sed -i "\$lineWhich"' i\\run_program("/sbin/sh", "/tmp/script.sh", "dummy", "1", "/tmp/script.sh");' \\
     \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script
-    sed -i "\$lineWhich"' i\\run_program(\"/sbin/unzip\", \"/tmp/Magisk/Magisk\", \"META-INF/com/google/android/*\", \"-d\", \"/tmp/Magisk\");' \\
+    sed -i "\$lineWhich"' i\\package_extract_file("META-INF/com/google/android/Magisk/Magisk.zip", "/tmp/Magisk.zip");' \\
     \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script
-    sed -i "\$lineWhich"' i\\package_extract_file(\"META-INF/com/google/android/MengYan/Magisk/Magisk\", \"/tmp/Magisk/Magisk\");' \\
+    sed -i "\$lineWhich"' i\\package_extract_file("META-INF/com/google/android/Magisk/script.sh", "/tmp/script.sh");' \\
     \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script
-    sed -i "\$lineWhich"' i\\run_program("/sbin/mkdir","/tmp/Magisk");' \\
+    sed -i "\$lineWhich"' i\\ui_print("- 安装Magisk_ROOT权限...");' \\
     \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script
-    sed -i "\$lineWhich"' i\\ui_print("-安装Magisk_ROOT权限...");' \\
-    \$CUR_PRO/UnpackedRom/META-INF/com/google/android/updater-script
+    echo '
+    #!/sbin/sh
+    # mount -o rw /system || mount -o rw,remount /system
+    # mount -o rw /system_root || mount -o rw,remount /system_root
+    mkdir -p /tmp/magisk/
+    cd /tmp/magisk/
+    cp /tmp/Magisk.zip /tmp/magisk/magisk.zip
+    unzip /tmp/magisk/magisk.zip
+    /sbin/busybox sh /tmp/magisk/META-INF/com/google/android/update-binary dummy 1 /tmp/magisk/magisk.zip
+    rm -rf /data/system/package_cache/*
+    mount -o rw /cust || mount -o rw,remount /cust
+    rm -rf /cust/app
+    cp /tmp/Magisk.zip /cust/magisk.zip
+    for list in `ls -d /data/adb/modules/*`; do
+      touch \$list/disable
+    done
+    mount -o rw /persist || mount -o rw,remount /persist
+    cp /tmp/Magisk.zip /persist/magisk.zip
+    ' > \$CUR_PRO/UnpackedRom/META-INF/com/google/android/Magisk/script.sh
     sleep 0.5
-    echo -e "\\033[1;31m添加完成\\033[0m"
+    echo "添加完成"
   }
   """;
 
@@ -727,8 +730,8 @@ String crackShowSecond() {
   ${checkApktoolFramework()}
   function crackShowSecond1(){
     checkApktoolFramework
-    aapt_check
-    zip_check
+    aapt_auto
+    zip_auto
     SystemUIPath=`find \$CUR_PRO/UnpackedImg/system -name "MiuiSystemUI.apk"`
     echo -e "\\033[1;31m反编译状态栏中\\033[0m"
     apktool d \$SystemUIPath \\
@@ -779,10 +782,10 @@ String crackShowSecond() {
 
 String simg2Img(String filepath) {
   return '''function Simg2img(){
-                rom-tool_check
+                rom-tool_auto
                 echo -n -e '\\033[1;31m转换中...\\033[0m'
-                $execwithloading '
-                ${binPath}/simg2img $filepath ${File(filepath).parent.path}/system.rimg\n 2>>\$CUR_PRO/error_log.txt
+                $loadingPrifix '
+                $binPath/simg2img $filepath ${File(filepath).parent.path}/system.rimg\n 2>>\$CUR_PRO/error_log.txt
                 '
                 echo 转换结束
               }''';
@@ -793,9 +796,9 @@ String img2Simg(String filepath) {
   return '''
                               function img2Simg(){
                                 touch $termLockFilePath
-                                rom-tool_check
+                                rom-tool_auto
                                 echo -n -e '\\033[1;31m转换中...\\033[0m'
-                                $execwithloading '
+                                $loadingPrifix '
                                 img2simg $filepath ${File(filepath).parent.path}/$_name.simg\n 2>>\$CUR_PRO/error_log.txt
                                 '
                                 echo 已转换至${File(filepath).parent.path}/$_name.simg
@@ -811,7 +814,7 @@ String mke2fsRepack(String simg) {
   function repackImg()
   {
     touch $termLockFilePath
-    rom-tool_check
+    rom-tool_auto
     echo -e "\\033[1;34m使用新方案打包...\\033[0m"
     chmod 777 /data/data/com.nightmare/files/lib/ld-linux-aarch64.so.1
     chmod 777 /data/data/com.nightmare/files/lib/libc.so.6
@@ -831,12 +834,12 @@ String mke2fsRepack(String simg) {
             echo -e "\\033[1;31m清空 \$flodername 数据残留...\\033[0m"
             rm -rf /data/data/com.nightmare/files/home/\$flodername
             echo -n -e "\\033[1;31m复制 \$flodername 到数据目录...\\033[0m"
-            $execwithloading "
+            $loadingPrifix "
             cp -rf '\$CUR_PRO/UnpackedImg/\$flodername' /data/data/com.nightmare/files/home
             "
             echo -n -e "\\033[1;31m恢复 \$flodername 符号链接...\\033[0m"
             export link_name=\$flodername'_links'
-            $execwithloading '
+            $loadingPrifix '
             cd /data/data/com.nightmare/files/home/
             cp -rf "\$CUR_PRO/Config/\$link_name" /data/data/com.nightmare/files/home/
             sh "/data/data/com.nightmare/files/home/\$link_name" 2>/dev/null
@@ -876,7 +879,7 @@ String mke2fsRepack(String simg) {
             if [ "$simg" !=  "" ]; then
               echo -n -e '\\033[1;31m转换为simg中...\\033[0m'
               export flodername=\$flodername
-              $execwithloading '
+              $loadingPrifix '
               img2simg "\$NIGHTMARE_PATH/YanTool/Rom/\$flodername.img" "\$CUR_PRO/OutFile/\$flodername.img"
               rm -rf \$NIGHTMARE_PATH/YanTool/Rom/\$flodername.img
               '
@@ -906,7 +909,7 @@ String mke2fsRepack(String simg) {
           if [ \"\$flodername\" != \"./\" ]; then
             #cd /data/data/com.nightmare/files/home/
             echo -n -e "\\033[1;31m恢复 \$flodername 符号链接...\\033[0m"
-            $execwithloading "
+            $loadingPrifix "
             sh \$CUR_PRO/Config/\$flodername'_links' >/dev/null 2>&1
             "
             filesize=\$(cat \$CUR_PRO/Config/\$flodername'_size')
@@ -937,10 +940,10 @@ String mke2fsRepack(String simg) {
 String addMd5(String name) {
   return '''
     function addMd5(){
-      echo  -e  "\\033[1;31m计算md5中\\033[0m"
+      echo -n "\x1b[1;31m计算md5中...\x1b[0m"
       md5=`md5sum \$CUR_PRO/UnpackedRom/$name.zip`
       mv \$CUR_PRO/UnpackedRom/$name.zip \$CUR_PRO/UnpackedRom/$name\_\${md5:0:9}.zip
-      echo  -e  "\\033[1;31m已添加\\033[0m"
+      echo "已添加到文件名末尾"
     }
     ''';
 }
@@ -967,7 +970,6 @@ function deleteAvb(){
     echo  -e  "\\033[1;31m未发现avb算法，下载中\\033[0m"
     mkdir $filesPath/usr/python >/dev/null 2>&1
     curl "$fileurl/Rom/python/delete_avb.py" -o $filesPath/usr/python/delete_avb.py
-    echo -e "\\033[1;31m下载完成\\033[0m"
   fi
     echo -e "\\033[1;31m>>> 去除vendor分区avb\\033[0m"
     fstab=\$CUR_PRO/UnpackedImg/vendor/etc/fstab.qcom
@@ -981,7 +983,7 @@ String zipAlign = () {
   String _tmp = '';
   _tmp = '''
 function zipAlign(){
-  zipalign_check
+  zipalign_auto
   echo -e "\\033[1;31m执行优化\\033[0m"
   allApks=`find \$CUR_PRO/UnpackedImg -name \"*.apk\"`
   for apk in \$allApks\n

@@ -1,0 +1,1 @@
+/Users/nightmare/Desktop/nightmare-space/nightmare_tool_cli/src/night "echo -n '123456789\\033[A'&&sleep 3"

@@ -7,10 +7,11 @@ import 'package:args/args.dart'; // 使用其中两个类ArgParser和ArgResults
 import 'package:custom_log/custom_log.dart';
 import 'package:ffi/ffi.dart';
 
+import 'global/rom_instance.dart';
 import 'header/cstdlib.dart';
 import 'header/cunistd.dart';
 import 'screen/login.dart';
-import 'utils/script_generate.dart' as script;
+import 'utils/script_generate.dart' as scripts;
 
 const String arrowChar = ' \x1b[1;32m←\x1b[0m ';
 const String cursorUpChar = '\x1b[A';
@@ -47,10 +48,6 @@ bool escStart = false;
 void clear() {
   print('\x1b[2J');
   print('\x1b[0;0H');
-  // for (int i = chooseIndex; i <= 3; i++) {
-  //   print(deleteOneLine);
-  //   cursorDown();
-  // }
 }
 
 Future<void> onKeyListiner(bool Function(int key) onKey) async {
@@ -116,45 +113,121 @@ void moveArrow(int key) {
   }
 }
 
+extension NiDirectory on Directory {
+  String get name => path.replaceAll(RegExp('.*/'), '');
+}
+
 Future<void> main(List<String> arguments) async {
   Log.e('欢迎使用 魇·工具箱 终端版');
   await login();
-  stdin.echoMode = false;
-  stdin.lineMode = false;
-  home();
+  // stdin.echoMode = false;
+  // stdin.lineMode = false;
+  Directory('Rom').createSync();
+  selectProject();
 }
 
+String green = '\x1b[32m';
+String red = '\x1b[31m';
+String yellow = '\x1b[33m';
+String blue = '\x1b[34m';
+String def = '\x1b[0m';
+void selectProject() {
+  clear();
+  List<FileSystemEntity> dirs = Directory('Rom').listSync();
+  List<String> projects = [];
+  if (dirs.isEmpty) {
+    println('$yellow当前没有发现任何工程');
+  } else {
+    println('$green选择工程');
+    for (FileSystemEntity dir in dirs) {
+      if (dir is Directory) {
+        projects.add(dir.name);
+      }
+    }
+  }
+  for (int i = 0; i < projects.length; i++) {
+    print('$blue${i + 1}.${projects[i]}\n');
+  }
+  println('${red}x.创建工程$def');
+
+  print('请选择 : ');
+  final String input = stdin.readLineSync();
+  if (input == 'x') {
+    createProject();
+  } else {
+    RomInstance.instance.currentProjectName = projects[int.tryParse(input) - 1];
+    RomInstance.instance.currentProjectPath =
+        'Rom/${projects[int.tryParse(input) - 1]}';
+    home();
+  }
+}
+
+void createProject() {
+  print('请输入工程名:');
+  final String input = stdin.readLineSync();
+  Directory('Rom/$input').createSync();
+  selectProject();
+}
+
+List<String> romDirs = <String>[
+  'Config',
+  'OutFile',
+  'UnpackedImg',
+  'UnpackedRom',
+];
 Future<void> home() async {
   print('\x1b[2J');
   print('\x1b[0;0H');
+  final String pro = RomInstance.instance.currentProjectName;
+  for (String dir in romDirs) {
+    Directory directory = Directory('Rom/$pro/$dir');
+    if (!directory.existsSync()) {
+      directory.createSync();
+    }
+  }
+  print('$yellow当前的工程为:$green${RomInstance.instance.currentProjectName}\n$def');
   print('1.文件转换\n');
   print('2.动态模块\n');
-  print('3.一键执行');
+  print('3.一键执行\n');
+  print('请选择 : ');
+  final String input = stdin.readLineSync();
+  print(input);
+  switch (input) {
+    case '1':
+      fileConvert();
+      break;
+    case '2':
+      break;
+    case '3':
+      break;
+    default:
+  }
   // cursorLeft();
-  showArrow(3);
+  // showArrow(3);
   // 隐藏光标，没有生效
   // print('\x1b[?25l');
   showLine = 3;
-  await onKeyListiner(
-    (key) {
-      if (key == 13 || key == 10) {
-        clear();
-        switch (chooseIndex) {
-          case 1:
-            fileConvert();
-            break;
-        }
-        return true;
-        // print(chooseIndex);
-      }
-      if (csiStart) {
-        csiStart = false;
-        // print(key);
-        moveArrow(key);
-        return false;
-      }
-    },
-  );
+
+  // await onKeyListiner(
+  //   (key) {
+  //     if (key == 13 || key == 10) {
+  //       clear();
+  //       switch (chooseIndex) {
+  //         case 1:
+  //           fileConvert();
+  //           break;
+  //       }
+  //       return true;
+  //       // print(chooseIndex);
+  //     }
+  //     if (csiStart) {
+  //       csiStart = false;
+  //       // print(key);
+  //       moveArrow(key);
+  //       return false;
+  //     }
+  //   },
+  // );
 }
 
 void print(Object object) {
@@ -166,46 +239,38 @@ void println(Object object) {
 }
 
 Future<void> fileConvert() async {
+  clear();
   print('1.解压刷机包\n');
   print('2.整合刷机文件\n');
   print('3.打包刷机包\n');
   print('4.解压br文件\n');
   print('0.返回上级\n');
-  showLine = 5;
-  print('\x1b[4A');
-  print('\x1b[14C');
-  chooseIndex = 1;
-  showArrow(showLine);
-  await onKeyListiner((key) {
-    // print('object');
-    if (key == 13 || key == 10) {
-      print('object');
-      clear();
-      switch (chooseIndex) {
-        case 1:
-          // fileConvert();
-          execUnzip();
-          break;
-        case 4:
-          // fileConvert();
-          unzipSystemBr();
-          break;
-      }
-      return true;
-      // print(chooseIndex);
-    }
-    if (csiStart) {
-      csiStart = false;
-      // print(key);
-      moveArrow(key);
-      return false;
-    }
-  });
+  print('请选择 : ');
+  final String input = stdin.readLineSync();
+  print(input);
+  switch (input) {
+    case '1':
+      execUnzip();
+      break;
+    case '2':
+      break;
+    case '3':
+      break;
+    case '0':
+      home();
+      break;
+    default:
+  }
+  // showLine = 5;
+  // print('\x1b[4A');
+  // print('\x1b[14C');
+  // chooseIndex = 1;
+  // showArrow(showLine);
 }
 
 void unzipSystemBr() {
   File('define').writeAsStringSync(
-    script.unZipBrScript('UnpackedRom/system.new.dat.br'),
+    scripts.unZipBrScript('UnpackedRom/system.new.dat.br'),
   );
   system('source define && rm -rf define && unZipBrsystem\n');
   stdin.readLineSync();
@@ -249,6 +314,7 @@ void system(String script) {
 }
 
 Future<void> execUnzip() async {
+  clear();
   List<FileSystemEntity> dirs = Directory.current.listSync();
   List<String> zipFiles = [];
   chooseIndex = 1;
@@ -258,51 +324,58 @@ Future<void> execUnzip() async {
     }
   });
   for (int i = 0; i < zipFiles.length; i++) {
-    print(zipFiles[i].replaceAll(RegExp('.*/'), ''));
-    if (i != zipFiles.length - 1) {
-      print('\n');
-    }
+    println('${i + 1}.${zipFiles[i].replaceAll(RegExp('.*/'), '')}');
   }
-  showLine = zipFiles.length;
-  showArrow(zipFiles.length);
-  await onKeyListiner((key) {
-    // print('object');
-    if (key == 13 || key == 10) {
-      print('object');
-      clear();
-      String script = '''
-      function unZipRom(){
-          #python_check
-          #7z_check
-          echo "\x1b[1;31m>>> 完整解压ROM中...\x1b[0m"
-          7z x -aoa "${zipFiles[chooseIndex - 1]}" -o"./UnpackedRom" >/dev/null
-          echo "<<< 刷机包解压结束..."
-      }
-      ''';
-      File('define').writeAsStringSync(script);
-      switch (chooseIndex) {
-        case 1:
-          // fileConvert();
-          // print('7z');
-          // system('sh', ['sh', '-c', 'pwd']);
-          system('source define && rm -rf define && unZipRom\n');
-          clear();
-          fileConvert();
-          // system('sh', ['sh', '-c', './define']);
-          // system('7z', ['7z', 't', zipFiles[chooseIndex]]);
-          // print('Platform.environment -> ${Platform.environment['TMPDIR']}');
-          // execUnzip();
+  print('请选择 : ');
+  String input = stdin.readLineSync();
+  String script = scripts.unZipRomScript(zipFiles[int.tryParse(input) - 1]);
+  File('define').writeAsStringSync(script);
+  Pointer<Utf8> env = Utf8.toUtf8(
+    'CUR_PRO=${RomInstance.instance.currentProjectPath}',
+  );
+  CStdlib cStdlib;
+  final DynamicLibrary dynamicLibrary = DynamicLibrary.process();
+  cStdlib = CStdlib(dynamicLibrary);
+  cStdlib.putenv(env.cast());
+  system('source define && rm -rf define && unZipRom\n');
+  // await onKeyListiner((key) {
+  //   // print('object');
+  //   if (key == 13 || key == 10) {
+  //     print('object');
+  //     clear();
+  //     String script = '''
+  //     function unZipRom(){
+  //         #python_check
+  //         #7z_check
+  //         echo "\x1b[1;31m>>> 完整解压ROM中...\x1b[0m"
+  //         7z x -aoa "${zipFiles[chooseIndex - 1]}" -o"./UnpackedRom" >/dev/null
+  //         echo "<<< 刷机包解压结束..."
+  //     }
+  //     ''';
+  //     File('define').writeAsStringSync(script);
+  //     switch (chooseIndex) {
+  //       case 1:
+  //         // fileConvert();
+  //         // print('7z');
+  //         // system('sh', ['sh', '-c', 'pwd']);
+  //         system('source define && rm -rf define && unZipRom\n');
+  //         clear();
+  //         fileConvert();
+  //         // system('sh', ['sh', '-c', './define']);
+  //         // system('7z', ['7z', 't', zipFiles[chooseIndex]]);
+  //         // print('Platform.environment -> ${Platform.environment['TMPDIR']}');
+  //         // execUnzip();
 
-          break;
-      }
-      return true;
-      // print(chooseIndex);
-    }
-    if (csiStart) {
-      csiStart = false;
-      // print(key);
-      moveArrow(key);
-      return false;
-    }
-  });
+  //         break;
+  //     }
+  //     return true;
+  //     // print(chooseIndex);
+  //   }
+  //   if (csiStart) {
+  //     csiStart = false;
+  //     // print(key);
+  //     moveArrow(key);
+  //     return false;
+  //   }
+  // });
 }

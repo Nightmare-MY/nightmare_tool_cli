@@ -16,6 +16,8 @@ void sleep_ms(unsigned int secs)
 }
 int main(int argc, char *argv[], char *envp[])
 {
+    pid_t curpid = getpid();
+    // printf("--->%d", curpid);
     int i = 0;
     for (i = 0; i < argc; i++)
     {
@@ -30,66 +32,20 @@ int main(int argc, char *argv[], char *envp[])
     }
     else if (pid == 0)
     {
-        char a = 'a';
-        int len = 0;
-        for (int i = 1; i < argc; i++)
-        {
-            int cur_len = strlen(argv[i]);
-            len += cur_len;
-            if (i != argc - 1)
-            {
-                len += 1;
-            }
-            len += 2;
-            // if (argv[i][0] != "-")
-            // {
-            //     printf("---> %c\n", argv[i][0]);
-            //     len += 2;
-            // }
-            // if ()
-        }
-        // 末尾指针，因为上面的算法多了一个空格
-        len += 1;
-        // printf("len -> %d\n", len);
-        char buf[len];
-        int is_first = 1;
-        for (int i = 1; i < argc; i++)
-        {
-            // printf("长度 %d\n", strlen(buf));
-            if (is_first)
-            {
-                sprintf(buf, "%s", argv[i]);
-                is_first = 0;
-            }
-            else
-            {
-                sprintf(buf, "%s \"%s\"", buf, argv[i]);
-            }
-        }
-        buf[len] = 0;
-        // printf("->%s<-\n", buf);
-        system(buf);
-        // printf("done\n");
-        // int tmp = 1;
-        // printf("parent ->%d\n", down);
-        // down = &tmp;
-        // printf("parent ->%d\n", down);
-        // printf("parent ->%d\n", down);
-        kill(pid, SIGINT);
-        return 0;
-    }
-    else
-    {
         sleep_ms(100);
-        time_t start, end;
+        // time_t start, end;
         // start = time(NULL); //or time(&start);
-        printf("   0.0");
+        printf("    0.0");
+        // exit(0);
         fflush(stdout);
         //…calculating…
         int m = 0;
         int i = 1;
+        // 满10
         int x = 0;
+        // 满100
         int h = 0;
+        // 满1000
         int t = 0;
         while (!*down)
         {
@@ -124,7 +80,7 @@ int main(int argc, char *argv[], char *envp[])
             {
                 x = 1;
             }
-            printf("\010\010%d.%d", m, i);
+            printf("\010\010\010%d.%ds", m, i);
             fflush(stdout);
             i++;
             if (i == 10)
@@ -134,6 +90,58 @@ int main(int argc, char *argv[], char *envp[])
             }
             sleep_ms(100);
         }
+    }
+    else
+    {
+        int len = 0;
+        // i 为1是因为第一个参数是执行文件的路径
+        for (int i = 1; i < argc; i++)
+        {
+            int cur_len = strlen(argv[i]);
+            len += cur_len;
+            if (i != argc - 1)
+            {
+                len += 1;
+            }
+            len += 2;
+            // if (argv[i][0] != "-")
+            // {
+            //     printf("---> %c\n", argv[i][0]);
+            //     len += 2;
+            // }
+            // if ()
+        }
+        // 末尾指针，因为上面的算法多了一个空格
+        // len += 1;
+        // printf("len -> %d\n", len);
+        char buf[len];
+        int is_first = 1;
+        for (int i = 1; i < argc; i++)
+        {
+            // printf("长度 %d\n", strlen(buf));
+            if (is_first)
+            {
+                sprintf(buf, "%s", argv[i]);
+                is_first = 0;
+            }
+            else
+            {
+                sprintf(buf, "%s \"%s\"", buf, argv[i]);
+            }
+        }
+        buf[len] = 0;
+        // printf("->%s<-\n", buf);
+        system(buf);
+        // printf("done\n");
+        // int tmp = 1;
+        // printf("parent ->%d\n", down);
+        // down = &tmp;
+        // printf("parent ->%d\n", down);
+        // printf("parent ->%d\n", down);
+        printf("\n");
+        kill(pid, SIGINT);
+
+        return 0;
     }
     return 0;
 }

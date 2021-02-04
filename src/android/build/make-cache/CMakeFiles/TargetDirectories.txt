@@ -1,0 +1,3 @@
+/Users/nightmare/Desktop/nightmare-space/nightmare_tool_cli/src/android/build/make-cache/CMakeFiles/rebuild_cache.dir
+/Users/nightmare/Desktop/nightmare-space/nightmare_tool_cli/src/android/build/make-cache/CMakeFiles/edit_cache.dir
+/Users/nightmare/Desktop/nightmare-space/nightmare_tool_cli/src/android/build/make-cache/CMakeFiles/term.dir

@@ -8,8 +8,6 @@ import 'package:custom_log/custom_log.dart';
 import 'package:ffi/ffi.dart';
 
 import 'global/rom_instance.dart';
-import 'header/cstdlib.dart';
-import 'header/cunistd.dart';
 import 'screen/login.dart';
 import 'utils/script_generate.dart' as scripts;
 
@@ -272,7 +270,7 @@ void unzipSystemBr() {
   File('define').writeAsStringSync(
     scripts.unZipBrScript('UnpackedRom/system.new.dat.br'),
   );
-  system('source define && rm -rf define && unZipBrsystem\n');
+  // system('source define && rm -rf define && unZipBrsystem\n');
   stdin.readLineSync();
   clear();
   fileConvert();
@@ -285,33 +283,33 @@ void unzipSystemBr() {
 //   }
 //   print(arrowChar);
 // }
-void system(String script) {
-  CStdlib cStdlib;
-  DynamicLibrary dynamicLibrary = DynamicLibrary.process();
-  cStdlib = CStdlib(dynamicLibrary);
-  final Pointer<Int8> nativeString = Utf8.toUtf8(script).cast();
-  cStdlib.system(nativeString);
-  free(nativeString);
-  return;
-  // print(args);
-  CUnistd cunistd;
-  cunistd = CUnistd(dynamicLibrary);
-  Pointer<Pointer<Utf8>> argv;
+// void system(String script) {
+//   CStdlib cStdlib;
+//   DynamicLibrary dynamicLibrary = DynamicLibrary.process();
+//   cStdlib = CStdlib(dynamicLibrary);
+//   final Pointer<Int8> nativeString = Utf8.toUtf8(script).cast();
+//   cStdlib.system(nativeString);
+//   free(nativeString);
+//   return;
+//   // print(args);
+//   CUnistd cunistd;
+//   cunistd = CUnistd(dynamicLibrary);
+//   Pointer<Pointer<Utf8>> argv;
 
-  // argv = allocate<Pointer<Utf8>>(count: args.length + 1);
+//   // argv = allocate<Pointer<Utf8>>(count: args.length + 1);
 
-  // /// 将Map内容拷贝到二维数组
-  // for (int i = 0; i < args.length; i++) {
-  //   argv[i] = Utf8.toUtf8(
-  //     args[i],
-  //   );
-  // }
+//   // /// 将Map内容拷贝到二维数组
+//   // for (int i = 0; i < args.length; i++) {
+//   //   argv[i] = Utf8.toUtf8(
+//   //     args[i],
+//   //   );
+//   // }
 
-  // argv[args.length] = nullptr;
-  // cunistd.execvp(nativeString, argv.cast());
-  // free(argv);
-  // free(nativeString);
-}
+//   // argv[args.length] = nullptr;
+//   // cunistd.execvp(nativeString, argv.cast());
+//   // free(argv);
+//   // free(nativeString);
+// }
 
 Future<void> execUnzip() async {
   clear();
@@ -333,11 +331,11 @@ Future<void> execUnzip() async {
   Pointer<Utf8> env = Utf8.toUtf8(
     'CUR_PRO=${RomInstance.instance.currentProjectPath}',
   );
-  CStdlib cStdlib;
+  // CStdlib cStdlib;
   final DynamicLibrary dynamicLibrary = DynamicLibrary.process();
-  cStdlib = CStdlib(dynamicLibrary);
-  cStdlib.putenv(env.cast());
-  system('source define && rm -rf define && unZipRom\n');
+  // cStdlib = CStdlib(dynamicLibrary);
+  // cStdlib.putenv(env.cast());
+  // system('source define && rm -rf define && unZipRom\n');
   // await onKeyListiner((key) {
   //   // print('object');
   //   if (key == 13 || key == 10) {

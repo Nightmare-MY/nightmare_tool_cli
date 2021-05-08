@@ -328,9 +328,8 @@ Future<void> execUnzip() async {
   String input = stdin.readLineSync();
   String script = scripts.unZipRomScript(zipFiles[int.tryParse(input) - 1]);
   File('define').writeAsStringSync(script);
-  Pointer<Utf8> env = Utf8.toUtf8(
-    'CUR_PRO=${RomInstance.instance.currentProjectPath}',
-  );
+  Pointer<Utf8> env =
+      'CUR_PRO=${RomInstance.instance.currentProjectPath}'.toNativeUtf8();
   // CStdlib cStdlib;
   final DynamicLibrary dynamicLibrary = DynamicLibrary.process();
   // cStdlib = CStdlib(dynamicLibrary);
